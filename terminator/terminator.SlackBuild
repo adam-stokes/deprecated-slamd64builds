@@ -1,0 +1,71 @@
+#!/bin/sh
+#   Copyright (C) 2009 Adam Stokes <adam.stokes@gmail.com>
+#
+#   This program is free software: you can redistribute it and/or modify it
+#   under the terms of the GNU General Public License as published by the Free
+#   Software Foundation, either version 3 of the License, or (at your option)
+#   any later version.
+#
+#   This program is distributed in the hope that it will be useful, but
+#   WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+#   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#   for more details.
+#
+#   You should have received a copy of the GNU General Public License along
+#   with this program.  If not, see <http://www.gnu.org/licenses/>.
+#   
+#   Revision date: 2009/02/04
+
+CWD=$(pwd)
+if [ "$TMP" = "" ]; then
+	TMP=/tmp
+fi
+
+APP=terminator
+VERSION="0.12"
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+TAG=${TAG:-_bM}
+PKG=$TMP/package-$APP
+
+# prep
+rm -rf $PKG 
+mkdir -p $TMP $PKG
+rm -rf $TMP/$APP-$VERSION
+
+# build
+cd $TMP || exit 1
+
+# upstream doesn't use conventional APP-VERSION
+tar -zxvf $CWD/$APP\_$VERSION.tar.gz || exit 1
+
+cd $APP-$VERSION || exit 1
+ 
+chown -R root:root .
+chmod -R u+w,go+r-w,a-s .
+
+python setup.py build
+
+# install
+python setup.py install --prefix=$PKG/usr
+
+mkdir -p $PKG/usr/doc/$APP-$VERSION
+cp -a \
+ ChangeLog COPYING INSTALL TODO README \
+   $PKG/usr/doc/$APP-$VERSION
+
+mkdir -p $PKG/install
+cat $CWD/slack-desc > $PKG/install/slack-desc
+
+if [ -d $PKG/usr/man ]; then
+	( cd $PKG/usr/man
+	find . -type f -exec gzip -9 {} \;
+	for i in $(find . -type l) ; do ln -s $(readlink $i).gz $i.gz ; rm $i ; done
+	) 
+fi
+
+# build package
+cd $PKG
+/sbin/makepkg -l y -c n $TMP/$APP-$VERSION-$ARCH-$BUILD.tgz
+
+

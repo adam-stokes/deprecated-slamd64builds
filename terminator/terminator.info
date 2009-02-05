@@ -1,0 +1,8 @@
+PRGNAM="terminator"
+VERSION="0.12"
+HOMEPAGE="http://www.tenshu.net/terminator/"
+DOWNLOAD="http://launchpad.net/terminator/trunk/0.12/+download/terminator_0.12.tar.gz"
+MD5SUM="259b2b1f88de822644e4d57abf857cb7"
+MAINTAINER="battlemidget"
+EMAIL="adam.stokes@gmail.com"
+APPROVED=""

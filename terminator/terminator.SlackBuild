@@ -47,7 +47,11 @@ chmod -R u+w,go+r-w,a-s .
 python setup.py build
 
 # install
-python setup.py install --prefix=$PKG/usr
+python setup.py install --root $PKG
+
+# fix man pages since setup.py places man pages
+# within /usr/share/man
+mv $PKG/usr/share/man $PKG/usr/man
 
 mkdir -p $PKG/usr/doc/$APP-$VERSION
 cp -a \
@@ -66,6 +70,4 @@ fi
 
 # build package
 cd $PKG
-/sbin/makepkg -l y -c n $TMP/$APP-$VERSION-$ARCH-$BUILD.tgz
-
-
+/sbin/makepkg -l y -c n $TMP/$APP-$VERSION-$ARCH-$BUILD${TAG}.tgz

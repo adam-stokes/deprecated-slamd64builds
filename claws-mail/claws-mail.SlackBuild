@@ -1,0 +1,248 @@
+#!/bin/sh
+# $Id: claws-mail.SlackBuild,v 1.6 2008/02/20 20:09:12 root Exp root $
+# Copyright (c) 2006-2008 Eric Hameleers <alien@slackware.com>
+# All rights reserved.
+#
+#   Permission to use, copy, modify, and distribute this software for
+#   any purpose with or without fee is hereby granted, provided that
+#   the above copyright notice and this permission notice appear in all
+#   copies.
+#
+#   THIS SOFTWARE IS PROVIDED ``AS IS'' AND ANY EXPRESSED OR IMPLIED
+#   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+#   MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+#   IN NO EVENT SHALL THE AUTHORS AND COPYRIGHT HOLDERS AND THEIR
+#   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+#   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+#   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF
+#   USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+#   ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+#   OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT
+#   OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+#   SUCH DAMAGE.
+# -----------------------------------------------------------------------------
+#
+# Slackware SlackBuild script 
+# ===========================
+# By:        Eric Hameleers <alien@slackware.com>
+# For:       claws-mail
+# Descr:     an email client and news reader
+# URL:       http://www.claws-mail.org/
+# Needs:     libetpan
+# Optional:  clamav
+# Changelog:
+# 2.6.1-1:   13/Dec/2006 by Eric Hameleers <alien@slackware.com>
+#            * Initial build.
+# 2.7.2-1:   26/jan/2006 by Eric Hameleers <alien@slackware.com>
+#            * Upgrade. Also removed PS and PDF versions of the manual, and
+#              moved the manuals (HTML and TXT) into /usr/doc/$PRGNAM-VERSION
+# 2.7.2-1:   07/mar/2006 by Eric Hameleers <alien@slackware.com>
+#            * Upgrade.
+# 3.3.0-1:   20/feb/2008 by Eric Hameleers <alien@slackware.com>
+#            * Upgrade.
+# 3.7.0-1:   05/feb/2009 by Adam Stokes <adam.stokes@gmail.com>
+#            * Upgrade., built for slamd64
+# 
+# Run 'sh claws-mail.SlackBuild --cleanup' to build a Slackware package.
+# The package (.tgz) plus descriptive .txt file are created in /tmp .
+# Install using 'installpkg'. 
+#
+# -----------------------------------------------------------------------------
+
+# Set initial variables:
+
+PRGNAM=claws-mail
+VERSION=${VERSION:-3.7.0}
+ARCH=${ARCH:-x86_64}
+BUILD=${BUILD:-1}
+
+DOCS="ABOUT-NLS AUTHORS COPYING ChangeLog* INSTALL NEWS README RELEASE_NOTES TODO"
+
+# Where do we look for sources?
+CWD=`pwd`
+SRCDIR=`dirname $0`
+[ "${SRCDIR:0:1}" == "." ] && SRCDIR=${CWD}/${SRCDIR}
+
+# Place to build (TMP) package (PKG) and output (OUTPUT) the program:
+TMP=${TMP:-/tmp/build}
+PKG=$TMP/package-$PRGNAM
+OUTPUT=${OUTPUT:-/tmp}
+
+SOURCE="$SRCDIR/${PRGNAM}-${VERSION}.tar.bz2"
+SRCURL="http://downloads.sourceforge.net/sylpheed-claws/${PRGNAM}-${VERSION}.tar.bz2"
+
+##
+## --- with a little luck, you won't have to edit below this point --- ##
+##
+
+# Exit the script on errors:
+set -e
+trap 'echo "$0 FAILED at line $LINENO!" | tee $OUTPUT/error-${PRGNAM}.log' ERR
+# Catch unitialized variables:
+set -u
+P1=${1:-1}
+
+# Slackware 11 and up need other option (gcc > 3.3.x)
+if [ `gcc -dumpversion | tr -d  '.' |cut -c 1-2` -gt 33 ]; then
+  MOPT=tune
+else
+  MOPT=cpu
+fi
+
+case "$ARCH" in
+  i386)      SLKCFLAGS="-O2 -march=i386 -m${MOPT}=i686"
+             SLKLDFLAGS=""; LIBDIRSUFFIX=""
+             ;;
+  i486)      SLKCFLAGS="-O2 -march=i486 -m${MOPT}=i686"
+             SLKLDFLAGS=""; LIBDIRSUFFIX=""
+             ;;
+  s390)      SLKCFLAGS="-O2"
+             SLKLDFLAGS=""; LIBDIRSUFFIX=""
+             ;;
+  powerpc)   SLKCFLAGS="-O2"
+             SLKLDFLAGS=""; LIBDIRSUFFIX=""
+             ;;
+  x86_64)    SLKCFLAGS="-O2 -fPIC"
+             SLKLDFLAGS="-L/usr/lib64"; LIBDIRSUFFIX="64"
+             ;;
+  athlon-xp) SLKCFLAGS="-march=athlon-xp -O3 -pipe -fomit-frame-pointer"
+             SLKLDFLAGS=""; LIBDIRSUFFIX=""
+             ;;
+esac
+
+# Create clean working environment:
+mkdir -p $TMP/tmp-$PRGNAM # location to build the source
+rm -rf $TMP/tmp-$PRGNAM/* # remove the remnants of previous build
+mkdir -p $PKG             # place for the package to be built
+rm -rf $PKG/*             # erase old package's contents
+mkdir -p $OUTPUT          # place for the package to be saved
+
+# Source file availability:
+if ! [ -f ${SOURCE} ]; then
+  if ! [ "x${SRCURL}" == "x" ]; then
+    # Check if the $SRCDIR is writable at all - if not, download to $OUTPUT
+    [ -w "$SRCDIR" ] || SOURCE="$OUTPUT/`basename $SOURCE`"
+    echo "Source '`basename ${SOURCE}`' not available yet..."
+    echo "Will download file to `dirname $SOURCE`"
+    wget -nv -T 30 -O "${SOURCE}" "${SRCURL}" || true
+    if [ $? -ne 0 -o ! -s "${SOURCE}" ]; then
+      echo "Downloading '`basename ${SOURCE}`' failed... aborting the build."
+      mv -f "${SOURCE}" "${SOURCE}".FAIL
+      exit 1
+    fi
+  else
+    echo "File '`basename ${SOURCE}`' not available... aborting the build."
+    exit 1
+  fi
+fi
+
+if [ "$P1" == "--download" ]; then
+  echo "Download complete."
+  exit 0
+fi
+
+# Package building:
+
+echo "++"
+echo "|| $PRGNAM-$VERSION"
+echo "++"
+
+cd $TMP/tmp-$PRGNAM
+echo "Extracting the source archive(s) for $PRGNAM..."
+if $(file ${SOURCE} | grep -q ": bzip2"); then
+  tar -xjvf ${SOURCE}
+elif $(file ${SOURCE} | grep -q ": gzip"); then
+  tar -xzvf ${SOURCE}
+fi
+cd ${PRGNAM}-${VERSION}
+chown -R root:root .
+chmod -R u+w,go+r-w,a-s .
+
+echo Building ...
+LDFLAGS="$SLKLDFLAGS" \
+CFLAGS="$SLKCFLAGS" \
+CXXFLAGS="$SLKCFLAGS" \
+./configure --prefix=/usr \
+            --libdir=/usr/lib${LIBDIRSUFFIX} \
+            --localstatedir=/var \
+            --sysconfdir=/etc \
+            --docdir=/usr/doc/$PRGNAM-$VERSION \
+            --disable-static \
+            --disable-gnomeprint \
+            --with-mandir=/usr/man \
+            --with-manualdir=/usr/doc/$PRGNAM-$VERSION \
+            --program-prefix="" \
+            --program-suffix="" \
+            --build=$ARCH-slackware-linux \
+            2>&1 | tee $OUTPUT/configure-${PRGNAM}.log
+make 2>&1 | tee $OUTPUT/make-${PRGNAM}.log
+
+# Install all the needed stuff to the package dir
+# Use installwatch if available, to produce a logfile of the installation
+# process that is more easily readable:
+if $(which installwatch > /dev/null 2>&1); then
+  installwatch -o $OUTPUT/install-${PRGNAM}.log make DESTDIR=$PKG install
+else
+  make DESTDIR=$PKG install 2>&1 |tee $OUTPUT/install-${PRGNAM}.log
+fi
+
+## Create a decent menu entry which the 'make install' forgot:
+#mkdir -p $PKG/usr/share/{applications,pixmaps}
+#cp -a $PRGNAM.png $PKG/usr/share/pixmaps/
+#sed -e s"#^Icon=\(.*\)#Icon=/usr/share/pixmaps/\1#" $PRGNAM.desktop \
+#  > $PKG/usr/share/applications/$PRGNAM.desktop
+
+# Post-install script:
+mkdir -p $PKG/install
+cat <<-EOT > $PKG/install/doinst.sh
+	if [ -x usr/bin/update-desktop-database ]; then
+	  chroot . /usr/bin/update-desktop-database &> /dev/null
+	fi
+	if [ -x usr/bin/gtk-update-icon-cache ]; then
+	  chroot . /gtk-update-icon-cache -f -t /usr/share/icons/hicolor 1>/dev/null 2>&1
+	fi
+	EOT
+
+# Add documentation to the package:
+mkdir -p $PKG/usr/doc/$PRGNAM-$VERSION
+cp -a $DOCS $PKG/usr/doc/$PRGNAM-$VERSION || true
+find $PKG/usr/doc/$PRGNAM-$VERSION -type f -name "*.pdf" -exec rm -f {} \;
+find $PKG/usr/doc/$PRGNAM-$VERSION -type f -name "*.ps" -exec rm -f {} \;
+chmod -R a-w $PKG/usr/doc/$PRGNAM-$VERSION/*
+
+# Compress the man page(s):
+mv $PKG/usr/share/man $PKG/usr || true
+find $PKG/usr/man -type f -name "*.?" -exec gzip -9f {} \;
+
+# Strip binaries:
+( cd $PKG
+  find . | xargs file | grep "executable" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+  find . | xargs file | grep "shared object" | grep ELF | cut -f 1 -d : | xargs strip --strip-unneeded 2> /dev/null
+)
+
+# Add a package description:
+mkdir -p $PKG/install
+cat $SRCDIR/slack-desc > $PKG/install/slack-desc
+if [ -f $SRCDIR/doinst.sh ]; then
+  cat $SRCDIR/doinst.sh >> $PKG/install/doinst.sh
+fi
+if [ -f $SRCDIR/slack-required ]; then
+  cat $SRCDIR/slack-required > $PKG/install/slack-required
+fi
+
+# Build the package:
+cd $PKG
+/sbin/makepkg --linkadd y --chown n $OUTPUT/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}.tgz 2>&1 | tee $OUTPUT/makepkg-${PRGNAM}.log
+cd $OUTPUT
+md5sum ${PRGNAM}-${VERSION}-${ARCH}-${BUILD}.tgz > ${PRGNAM}-${VERSION}-${ARCH}-${BUILD}.tgz.md5
+cd -
+cat $PKG/install/slack-desc | grep "^${PRGNAM}" > $OUTPUT/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}.txt
+if [ -f $PKG/install/slack-required ]; then
+  cat $PKG/install/slack-required > $OUTPUT/${PRGNAM}-${VERSION}-${ARCH}-${BUILD}.dep
+fi
+
+# Clean up the extra stuff:
+if [ "$P1" = "--cleanup" ]; then
+  rm -rf $TMP/tmp-$PRGNAM
+  rm -rf $PKG
+fi

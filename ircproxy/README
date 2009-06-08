@@ -1,0 +1,47 @@
+  ------------------------------------------------------------------------------
+  IRCPROXY
+  MULTI USER IRC BOUNCER WITH IPV6 AND SSL SUPPORT
+    __
+   /\_\  _ __   ___   _____   _ __   ___   __  _  __  __
+   \/\ \/\`'__\/'___\/\ '__`\/\`'__\/ __`\/\ \/'\/\ \/\ \
+    \ \ \ \ \//\ \__/\ \ \L\ \ \ \//\ \L\ \/>  </\ \ \_\ \
+     \ \_\ \_\\ \____\\ \ ,__/\ \_\\ \____//\_/\_\\/`____ \
+      \/_/\/_/ \/____/ \ \ \/  \/_/ \/___/ \//\/_/ `/___/> \
+                        \ \_\                         /\___/
+                         \/_/                         \/__/
+
+  $Id: README 54 2009-03-18 18:23:29Z jonasio $
+  ------------------------------------------------------------------------------
+
+  README
+
+
+  The ircproxy is a multi-user IRC bouncer written in C for UNIX
+  compatible systems.
+
+  It can proxy simultaneous users at the same time to different IRC servers.
+  The IRC connection will stay connected to IRC when the IRC client disconnects,
+  so that the user can later reattach to the same connection. Private messages
+  can be logged, so that the user can read it when reattaching to the IRC
+  connection. It is also possible to attach multiple IRC clients on the same
+  IRC connection.
+
+  Read the INSTALL file for instructions on how to configure, compile and
+  install the ircproxy.
+
+  A list of commands for the ircproxy:
+
+
+  PCONNLIST					List your possible connections.
+  PCONNECT <Connection name> <Server>		Connect to a specific server.
+  PQUIT <Connection name>			Request the connection to quit from IRC.
+  PATTACH <Connection name>			Attach a specific connection.
+  PDETACH					Detach from a connection.
+  LOGLIST <Connection name> <Logfile>		List your logs.
+  READLOG <Connection name> <Logfile>		Read your away log.
+  ERASELOG <Connection name> <Logfile>		Erase your away log.
+  READCHANLOG <Connection name> <Logfile>	Read channel logs.
+  ERASECHANLOG <Connection name> <Logfile>	Erase channel logs.
+
+
+  ------------------------------------------------------------------------------

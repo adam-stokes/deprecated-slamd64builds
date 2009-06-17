@@ -1,0 +1,71 @@
+
+README for LibStroke/LibGStroke
+(http://www.etla.net/libstroke/)
+
+LibGStroke is a port of the LibStroke library to the Gnome
+environment, and is being worked on by Dan Nicolaescu and Mark Willey.
+It is fully functional right now, you can find more details in
+README.libgstroke, the source code in the libgstroke subdirectory and
+a demo in tests/gnome_stroke_test.c
+The goal is to have a simple and complete implementation of stroke
+recognition that can be used by all Gnome applications.
+
+For DEMOS: see the tests subdirectory (it contains a demo for
+LibStroke and one for LibGStroke). 
+
+For NEWS see the NEWS file. 
+
+LibStroke is a stroke interface library.  Strokes are motions
+of the mouse that can be interpreted by a program as a command.  Strokes
+are used extensively in CAD programs.  I fell in love with them when I was
+using the Mentor Graphics CAD tools and the CAD tools internally developed
+by Intel.  I am writing this library so that others can see how useful
+strokes can be and so that more programs take advantage of this extremely
+natural human-computer interface.
+
+The basic idea:
+
+Your program forwards certain events to a LibStroke function called
+record().  These events are built up into a string of numbers representing
+positions on a grid.  The size of the grid is 3x3.  Then, when the final
+event is sent to the library, a sequence of numbers will be returned in a
+string.  This sequence represents the path that the stroke followed.
+Currently, there is only one interface to the library -- the record()
+function will return the string as an argument.  In the future, this will
+be adapted to make it more flexible with a multitude of interfaces.
+
+This grid looks like this:
+
+  1  2  3
+
+  4  5  6
+
+  7  8  9
+
+I am resisting my natural computer engineer tendancy of starting to count
+with zero...  ;-)  Just so it looks like a phone keypad and for other
+hysterical raisins.
+
+For a set of proposed standard strokes see doc/standard_strokes.jpg 
+
+For more detailed information on the algorithm, please see the paper I
+wrote on stroke recognition for an IEEE paper contest.  It's on the web
+page.
+
+The library comes with a test program for the purpose of experimenting with
+the library.  Run stroke_test and try a few strokes on the window.  Depress
+the middle mouse button and drag it for a bit.  Release the button.  The
+stroke sequence will be printf'd out by stroke_test.
+
+To help you add LibStroke support for your application, there are reference
+applications included in the tarball and links to real applications that use
+LibStroke (FVWM2, gEDA) available the LibStroke home page.
+
+Try it, you'll like it.  :)
+
+For comments, questions, suggestions, patches and to tell how you have
+used LibStroke/LibGStroke write to:
+Mark Willey, ETLA Technical Solutions, willey@etla.net
+and
+Dan Nicolaescu, dann@ics.uci.edu
+
